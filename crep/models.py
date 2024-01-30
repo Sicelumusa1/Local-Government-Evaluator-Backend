@@ -21,15 +21,38 @@ class Municipality(models.Model):
         return self.name
 
 
+class Ward(models.Model):
+    ward_number = models.IntegerField(unique=True)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Ward {self.ward_number} - {self.municipality}"
+
+
 class Councilor(models.Model):
     names = models.CharField(max_length=100, null=True, blank=True)
     surname = models.CharField(max_length=100, null=True, blank=True)
-    municipality = models.CharField(max_length=100, null=True, blank=True)
-    ward_number = models.IntegerField()
+    ward = models.OneToOneField(Ward,  on_delete=models.CASCADE)
     affiliation = models.CharField(max_length=100, null=True, blank=True)
 
+    # Determine the number of ratings made for each councilor
+    def no_of_ratings(self):
+        ratings = Rating.objects.filter(councilor=self)
+        return len(ratings)
+
+    # Determine average ratings for each councilor
+    def avg_ratings(self):
+        total = 0
+        ratings = Rating.objects.filter(councilor=self)
+        for rating in ratings:
+            total += rating.stars
+        if len(ratings) > 0:
+            return total / len(ratings)
+        else:
+            return 0
+
     def __str__(self):
-        return f"{self.names} {self.surname}, of {self.municipality} Ward {self.ward_number}"
+        return f"{self.names} {self.surname}, Ward {self.ward}"
 
 
 class Services(models.Model):
@@ -37,29 +60,4 @@ class Services(models.Model):
 
     def __str__(self):
         return self.service_name
-
-
-class Rating(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    stars = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    councilor = models.ForeignKey(Councilor, on_delete=models.CASCADE)
-    service = models.ForeignKey(Services, on_delete=models.CASCADE)
-    section_or_area = models.CharField(max_length=50)
-    quarter = models.IntegerField()
-    year = models.IntegerField()
-
-    def __str__(self):
-        return (f"{self.user} of ({self.section_or_area}) rates {self.councilor} for {self.service} "
-                f"with {self.stars} stars")
-
-    class Meta:
-        #  Ensure that a user can only rate a councilor of their ward only once a quarter
-        unique_together = ['user', 'councilor', 'quarter', 'year']
-
-    def save(self, *args, **kwargs):
-        #  Set the current quarter and year if not provided
-        if not self.quarter or not self.year:
-            now = timezone.now()
-            self.quarter = (now.month - 1) // 3 + 1
-            self.year = now.year
-        super().save(*args, **kwargs)
+    

@@ -1,3 +1,5 @@
+#!/ usr/bin/python3
+
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -7,60 +9,79 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Province, Municipality, Ward, Councilor, Services, Rating
 from .serializers import ProvinceSerializer, MunicipalitySerializer, CouncilorSerializer
-from .serializers import ServicesSerializer, RatingSerializer, UserSerializer, WardSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from .serializers import ServicesSerializer, RatingSerializer, WardSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 # Create your views here.
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
 class ProvinceViewSet(viewsets.ModelViewSet):
+    """
+    Manages geographic provinces.
+    """
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
     permission_classes = (AllowAny,)
 
 
 class MunicipalityViewSet(viewsets.ModelViewSet):
-    queryset = Municipality.objects.all()
+    """
+    Manages municipal subdivisions within provices.
+    """
     serializer_class = MunicipalitySerializer
     permission_classes = (AllowAny,)
 
+    def get_queryset(self):
+        # Retrieve the province_pk from the URL kwargs
+        province_pk = self.kwargs.get('province_pk')
+
+        # Filter the municipalities based on the specified province
+        queryset = Municipality.objects.filter(province=province_pk)
+        return queryset
+
 
 class WardViewSet(viewsets.ModelViewSet):
-    queryset = Ward.objects.all()
+    """
+    Manages electoral divisions within municipalities.
+    """
     serializer_class = WardSerializer
     permission_classes = (AllowAny,)
 
+    def get_queryset(self):
+        # Retrieve the municipality_pk from the URL kwargs
+        municipality_pk = self.kwargs.get('municipality_pk')
+
+        # Filter the wards based on the specified province
+        queryset = Ward.objects.filter(municipality=municipality_pk)
+        return queryset
+
 
 class CouncilorViewSet(viewsets.ModelViewSet):
+    """
+    Manages elected councilors within wards.
+    """
     queryset = Councilor.objects.all()
     serializer_class = CouncilorSerializer
     authentication_classes = (TokenAuthentication, )
     permission_classes = (AllowAny, )
+        
     # Custom rating method
 
     @action(detail=True, methods=['POST'])
     def rate_councilor(self, request, pk=None):
-        if 'stars' in request.data:
+        if 'service' in request.data and 'stars' in request.data:
 
             councilor = Councilor.objects.get(id=pk)
             stars = request.data['stars']
             user = request.user
             feedback = request.data.get('feedback', None)
-            service = request.data.get('service', None)
-            print('user', user.username)
-            print('Councilor ID', councilor.id)
-            print('Stars', stars)
-            print('Service ID', service)
+            service_id = request.data.get('service')
+            # print('user', user.username)
+            # print('Councilor ID', councilor.id)
+            # print('Stars', stars)
+            # print('Service ID', service_id)
 
-            if service is None:
-                response = {'message': 'Service to rate the councilor on is not provided'}
-                return Response(response, status=status.HTTP_400_BAD_REQUEST)
             try:
-                rating = Rating.objects.get(user=user.id, councilor=councilor.id)
+                rating = Rating.objects.get(user=user.id, councilor=councilor.id, service_id=service_id)
                 rating.stars = stars
                 rating.feedback = feedback
                 rating.save()
@@ -68,7 +89,7 @@ class CouncilorViewSet(viewsets.ModelViewSet):
                 response = {'message': 'Rating updated', 'result': serializer.data}
                 return Response(response, status=status.HTTP_200_OK)
             except:
-                rating = Rating.objects.create(user=user, councilor=councilor, stars=stars, feedback=feedback)
+                rating = Rating.objects.create(user=user, councilor=councilor, service_id=service_id, stars=stars, feedback=feedback)
                 serializer = RatingSerializer(rating, many=False)
                 response = {'message': 'Rating created successfully', 'result': serializer.data}
                 return Response(response, status=status.HTTP_200_OK)

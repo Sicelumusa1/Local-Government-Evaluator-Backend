@@ -22,5 +22,5 @@ from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('crep/', include('crep.urls')),
-    path('auth/', obtain_auth_token)
+    path('api/v1/auth/', include('accounts.urls'))
 ]

@@ -1,19 +1,20 @@
+#!/usr/bin/python3
+
+"""
+Serializers for converting complex data types (such as models) to and from native python data types.
+
+This module defines serializers for the followig models:
+- Userserializer: Serializer for the User model from Django's Authetication framework.
+                    It includes fields for user edentification and password.
+- PrivinceSerializer: Serializer for the Province model, representing municipal subdivisions.
+- WardSerializer: Serializer for the Ward model, representing electoral divisions within municipalities.
+- CouncilorSerializer: Serializer for the Councilor model, representing elected counsilors.
+- ServicesSerializer: Serializer for the Rating model, representating rating associated with services.
+
+Each serializer is a subclass of rest_framework. serializers.ModelSerializer and specifies the model and fields to include or exclude duing serialization and deserialization.
+"""
 from rest_framework import serializers
 from .models import Province, Municipality, Ward, Councilor, Services, Rating
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'password')
-        extra_kwargs = {'password': {'write_only': True, 'required': True}}
-
-        def create(self, validated_data):
-            user = User.objects.create_user(**validated_data)
-            token = Token.objects.create(user=user)
-            return user
 
 
 class ProvinceSerializer(serializers.ModelSerializer):

@@ -32,16 +32,23 @@ class MunicipalitySerializer(serializers.ModelSerializer):
 class WardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ward
-        fields = ('id', 'ward_number', 'municipality')
+        fields = ('ward_number', 'municipality')
 
 
 class CouncilorSerializer(serializers.ModelSerializer):
     names = serializers.CharField(max_length=100, required=True)
     surname = serializers.CharField(max_length=100, required=True)
+    ward_number = serializers.SerializerMethodField()
 
     class Meta:
         model = Councilor
-        fields = ('id', 'names', 'surname', 'ward', 'affiliation', 'no_of_ratings', 'avg_ratings')
+        fields = ('id', 'names', 'surname', 'ward_number', 'affiliation', 'no_of_ratings', 'avg_ratings')
+
+    def get_ward_number(self, obj):
+        if obj.ward:
+            return obj.ward.ward_number
+        else:
+            return None
 
 
 class ServicesSerializer(serializers.ModelSerializer):

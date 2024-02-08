@@ -34,14 +34,13 @@ class VerifyEmail(GenericAPIView):
             user_code_obj = OTP.objects.get(pin=otp_code)
             user = user_code_obj.user
             if not user.is_verified:
-                user.is_verified=True
+                user.is_verified = True
+                user.is_active = True
                 user.save()
-                return Response({
-                    'message': 'Email verified successfilly'
+                return Response({'message': 'Email verified successfilly'
                 }, status=status.HTTP_200_OK)
-            return Response({
-                'message': 'Code invalid user already cerified'
-            }, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({'message': 'Code invalid user already cerified'}, status=status.HTTP_204_NO_CONTENT)
         except OTP.DoesNotExist:
             return Response({'message': 'otp not provided'}, status=status.HTTP_404_NOT_FOUND)
         

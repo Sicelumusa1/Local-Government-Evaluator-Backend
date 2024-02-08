@@ -8,9 +8,11 @@ from .views import ProvinceViewSet, MunicipalityViewSet, WardViewSet
 
 router = routers.DefaultRouter()
 router.register('provinces', ProvinceViewSet)
-router.register('provinces/(?P<province_pk>[^/.]+)/municipalities', MunicipalityViewSet, basename='province-municipalities')
-router.register('municipalities/(?P<municipality_pk>[^/.]+)/wards', WardViewSet, basename='municipality-wards')
-router.register('councilors', CouncilorViewSet)
+router.register('municipalities', MunicipalityViewSet, basename='municipality')
+# router.register('provinces/(?P<province_pk>[^/.]+)/municipalities', MunicipalityViewSet, basename='province-municipalities')
+# router.register('municipalities/(?P<municipality_pk>[^/.]+)/wards', WardViewSet, basename='municipality-wards')
+router.register('wards', WardViewSet, basename='ward')
+router.register('councilors', CouncilorViewSet, basename='councilor')
 router.register('services', ServicesViewSet)
 router.register('ratings', RatingViewSet)
 

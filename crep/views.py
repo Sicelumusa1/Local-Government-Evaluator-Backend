@@ -29,13 +29,17 @@ class MunicipalityViewSet(viewsets.ModelViewSet):
     """
     serializer_class = MunicipalitySerializer
     permission_classes = (AllowAny,)
+    # queryset = Municipality.objects.all()
 
     def get_queryset(self):
-        # Retrieve the province_pk from the URL kwargs
-        province_pk = self.kwargs.get('province_pk')
+        # Retrieve the province_id from the query parameters
+        province_id = self.request.query_params.get('province_id')
 
         # Filter the municipalities based on the specified province
-        queryset = Municipality.objects.filter(province=province_pk)
+        if province_id:
+            queryset = Municipality.objects.filter(province=province_id)
+        else:
+            queryset = Municipality.objects.all()
         return queryset
 
 
@@ -47,11 +51,14 @@ class WardViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
-        # Retrieve the municipality_pk from the URL kwargs
-        municipality_pk = self.kwargs.get('municipality_pk')
+        # Retrieve the municipality_id from the query parameters
+        municipality_id = self.request.query_params.get('municipality_id')
 
-        # Filter the wards based on the specified province
-        queryset = Ward.objects.filter(municipality=municipality_pk)
+        # Filter the municipalities based on the specified province
+        if municipality_id:
+            queryset = Ward.objects.filter(municipality=municipality_id)
+        else:
+            queryset = Ward.objects.all()
         return queryset
 
 
@@ -63,6 +70,16 @@ class CouncilorViewSet(viewsets.ModelViewSet):
     serializer_class = CouncilorSerializer
     authentication_classes = (TokenAuthentication, )
     permission_classes = (AllowAny, )
+
+    def get_queryset(self):
+        # Retrieve the ward_number from the query parameters
+        queryset = super().get_queryset()       
+        ward_number = self.request.query_params.get('ward_number')
+
+        # Filter the councilor based on the specified ward number
+        if ward_number:
+            queryset = Councilor.objects.filter(ward__ward_number=ward_number)
+        return queryset
         
     # Custom rating method
 

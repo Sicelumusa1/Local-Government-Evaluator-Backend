@@ -1,6 +1,17 @@
+
+app_data.csv
+
 *.pyc
 __pycach__/
+
+db.sqlite3
+/media/
+/static/
+
+/crep/migrations/
+.env
+
 .vscode/
 .idea/
 
-venv/
+/venv/

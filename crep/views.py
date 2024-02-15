@@ -11,6 +11,8 @@ from .models import Province, Municipality, Ward, Councilor, Services, Rating
 from .serializers import ProvinceSerializer, MunicipalitySerializer, CouncilorSerializer
 from .serializers import ServicesSerializer, RatingSerializer, WardSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.db.models import Avg, Q
 # Create your views here.
 
 
@@ -27,13 +29,14 @@ class MunicipalityViewSet(viewsets.ModelViewSet):
     """
     Manages municipal subdivisions within provices.
     """
+    
     serializer_class = MunicipalitySerializer
     permission_classes = (AllowAny,)
     # queryset = Municipality.objects.all()
 
     def get_queryset(self):
         # Retrieve the province_id from the query parameters
-        province_id = self.request.query_params.get('province_id')
+        province_id = self.kwargs.get('province_id')
 
         # Filter the municipalities based on the specified province
         if province_id:
@@ -47,12 +50,13 @@ class WardViewSet(viewsets.ModelViewSet):
     """
     Manages electoral divisions within municipalities.
     """
+  
     serializer_class = WardSerializer
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
         # Retrieve the municipality_id from the query parameters
-        municipality_id = self.request.query_params.get('municipality_id')
+        municipality_id = self.kwargs.get('municipality_id')
 
         # Filter the municipalities based on the specified province
         if municipality_id:
@@ -66,21 +70,32 @@ class CouncilorViewSet(viewsets.ModelViewSet):
     """
     Manages elected councilors within wards.
     """
-    queryset = Councilor.objects.all()
     serializer_class = CouncilorSerializer
-    authentication_classes = (TokenAuthentication, )
+    authentication_classes = (JWTAuthentication, )
     permission_classes = (AllowAny, )
 
     def get_queryset(self):
-        # Retrieve the ward_number from the query parameters
-        queryset = super().get_queryset()       
-        ward_number = self.request.query_params.get('ward_number')
-
-        # Filter the councilor based on the specified ward number
-        if ward_number:
-            queryset = Councilor.objects.filter(ward__ward_number=ward_number)
-        return queryset
         
+        # Retrieve the query parameter to determine whether to fetch best or worst rated councilors
+        rating_type = self.request.query_params.get('rating_type')
+
+        if rating_type == 'best':
+            # Fetch best rated councilors based on average rating >=4
+            queryset = Councilor.objects.annotate(avg_rating=Avg('rating__stars')).filter(avg_rating__gte=4)
+        elif rating_type == 'worst':
+            # Fetch worst rated councilors based on average rating < 3 or None
+            queryset = Councilor.objects.annotate(avg_rating=Avg('rating__stars')).filter(Q(avg_rating__lt=3) | Q(avg_rating=None))
+        else:
+            # Retrieve the ward_number from the query parameters      
+            ward_number = self.kwargs.get('ward_number')
+
+            # Filter the councilor based on the provided parameters
+            if ward_number:
+                queryset = Councilor.objects.filter(ward__ward_number=ward_number)
+            else:
+                queryset = Councilor.objects.all()
+        return queryset
+            
     # Custom rating method
 
     @action(detail=True, methods=['POST'])
@@ -92,10 +107,6 @@ class CouncilorViewSet(viewsets.ModelViewSet):
             user = request.user
             feedback = request.data.get('feedback', None)
             service_id = request.data.get('service')
-            # print('user', user.username)
-            # print('Councilor ID', councilor.id)
-            # print('Stars', stars)
-            # print('Service ID', service_id)
 
             try:
                 rating = Rating.objects.get(user=user.id, councilor=councilor.id, service_id=service_id)

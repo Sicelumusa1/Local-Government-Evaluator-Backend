@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from .utils import send_pin
 from .models import OTP
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.backends import TokenBackend
 # Create your views here.
 
 class SignupUserView(GenericAPIView):
@@ -12,7 +13,6 @@ class SignupUserView(GenericAPIView):
     serializer_class= SignupSerializer
 
     def post(self, request):
-        user_data=request.data
         serializer=self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -51,3 +51,20 @@ class LoginView(GenericAPIView):
         serializer = self.serializer_class(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class TestAuthenticationView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def validate_jwt_token(token):
+        try:
+            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=False)
+            user = valid_data['user']
+            return user
+        except Exception as e:
+            return None
+
+    def get(self, request):
+        data= {
+            'message': 'Authorized'
+        }
+        return Response(data, status=status.HTTP_200_OK)

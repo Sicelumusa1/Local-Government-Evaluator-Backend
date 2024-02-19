@@ -32,7 +32,7 @@ class MunicipalitySerializer(serializers.ModelSerializer):
 class WardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ward
-        fields = ('ward_number', 'municipality')
+        fields = ('id', 'ward_number', 'municipality')
 
 
 class CouncilorSerializer(serializers.ModelSerializer):

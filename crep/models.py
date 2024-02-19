@@ -4,6 +4,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.db.models import Avg
 
 # Create your models here.
 
@@ -54,22 +55,14 @@ class Councilor(models.Model):
         """
         Determines the number of rating made for each councilor.
         """
-        ratings = Rating.objects.filter(councilor=self)
-        return len(ratings)
+        return Rating.objects.filter(councilor=self).values('user').distinct().count()
 
     # Determine average ratings for each councilor
     def avg_ratings(self):
         """
         Determines the average ratings for each councilor.
         """
-        total = 0
-        ratings = Rating.objects.filter(councilor=self)
-        for rating in ratings:
-            total += rating.stars
-        if len(ratings) > 0:
-            return total / len(ratings)
-        else:
-            return 0
+        return Rating.objects.filter(councilor=self).aggregate(avg_rating=Avg('stars'))['avg_rating'] or 0
 
     def __str__(self):
         return f"{self.names} {self.surname}, Ward {self.ward}"
@@ -97,13 +90,16 @@ class Rating(models.Model):
     year = models.IntegerField()
     feedback = models.TextField(blank=True, null=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return (f"{self.user} of ({self.section_or_area}) rates {self.councilor} for {self.service} "
                 f"with {self.stars} stars")
 
     class Meta:
         #  Ensure that a user can only rate a councilor of their ward only once a quarter
-        unique_together = ['user', 'councilor', 'quarter', 'year']
+        unique_together = ['user', 'councilor', 'service', 'quarter', 'year']
 
     def save(self, *args, **kwargs):
         #  Set the current quarter and year if not provided

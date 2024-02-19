@@ -9,7 +9,8 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ['email', 'first_name', 'last_name', 'username', 'password', 'password2']
+        fields = ['email', 'first_name', 'last_name', 'username', 'password', 'password2', 'province', 
+                  'municipality', 'ward', 'councilor' ,'section_or_area']
 
     def validate(self, attrs):
         password= attrs.get('password', '')
@@ -25,6 +26,11 @@ class SignupSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name'),
             username=validated_data.get('username'),
             password=validated_data.get('password'),
+            province=validated_data.get('province'),
+            municipality=validated_data.get('municipality'),
+            ward=validated_data.get('ward'),
+            councilor=validated_data.get('councilor'),
+            section_or_area=validated_data.get('section_or_area'),
         )
         return user
 

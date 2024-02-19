@@ -15,8 +15,8 @@ class AccountManager(BaseUserManager):
         except ValidationError:
             raise ValueError(_('Please provide a valid email address'))
     
-    def create_user(self, first_name, last_name, username, email, password,
-                    province, municipality, ward, **extra_fields):
+    def create_user(self, first_name, last_name, username, email, password, province, 
+                    municipality, ward, councilor, section_or_area):
         if email:
             email=self.normalize_email(email)
             self.email_validator(email)
@@ -28,9 +28,9 @@ class AccountManager(BaseUserManager):
         if not last_name:
             raise ValueError(_('Last name is required'))
         
-        user = self.model(email=email, username=username, first_name=first_name, 
-                          last_name=last_name, province=province, municipality=municipality, 
-                          ward=ward, **extra_fields)
+        user = self.model(email=email, username=username, first_name=first_name, last_name=last_name, 
+                          province=province, municipality=municipality, ward=ward, councilor=councilor, 
+                          section_or_area=section_or_area)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -48,6 +48,7 @@ class AccountManager(BaseUserManager):
         user.is_admin = True
         user.is_active = True
         user.is_staff = True
+        user.is_superuser = True
         user.is_superadmin = True
         user.save(using=self._db)
         return user
@@ -59,9 +60,9 @@ class Account(AbstractBaseUser):
     email = models.EmailField(max_length=100, unique=True, verbose_name=_('Email Address'))
     province = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True, blank=True)
     municipality = models.ForeignKey(Municipality, on_delete=models.SET_NULL, null=True, blank=True)
-    Councilor = models.ForeignKey(Councilor, on_delete=models.SET_NULL, null=True, blank=True)
+    councilor = models.ForeignKey(Councilor, on_delete=models.SET_NULL, null=True, blank=True)
     ward = models.ForeignKey(Ward,  on_delete=models.SET_NULL, null=True, blank=True)
-    section_or_area = models.CharField(max_length=100)
+    section_or_area = models.CharField(max_length=200, null=True, blank=True, verbose_name=_('Section or Area'))
     
     # required
     date_joined = models.DateTimeField(auto_now_add=True)

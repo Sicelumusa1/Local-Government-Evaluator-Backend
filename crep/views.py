@@ -4,8 +4,10 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
-from django.contrib.auth.models import User
+from datetime import timedelta
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Province, Municipality, Ward, Councilor, Services, Rating
 from .serializers import ProvinceSerializer, MunicipalitySerializer, CouncilorSerializer
@@ -13,6 +15,7 @@ from .serializers import ServicesSerializer, RatingSerializer, WardSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db.models import Avg, Q
+from django.shortcuts import get_object_or_404
 # Create your views here.
 
 
@@ -64,8 +67,7 @@ class WardViewSet(viewsets.ModelViewSet):
         else:
             queryset = Ward.objects.all()
         return queryset
-
-
+    
 class CouncilorViewSet(viewsets.ModelViewSet):
     """
     Manages elected councilors within wards.
@@ -97,7 +99,6 @@ class CouncilorViewSet(viewsets.ModelViewSet):
         return queryset
             
     # Custom rating method
-
     @action(detail=True, methods=['POST'])
     def rate_councilor(self, request, pk=None):
         if 'service' in request.data and 'stars' in request.data:
@@ -107,16 +108,38 @@ class CouncilorViewSet(viewsets.ModelViewSet):
             user = request.user
             feedback = request.data.get('feedback', None)
             service_id = request.data.get('service')
+            
+            # Check if the user is trying to rate their councilor or not
+            user_councilor = request.user.councilor
+            if user_councilor == councilor:
+               
+                # Allow the rating
+                pass
+            else:
+                # Reject the rating
+                response = {'message': "This is not your councilor, you can't rate them."}
+                return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                rating = Rating.objects.get(user=user.id, councilor=councilor.id, service_id=service_id)
-                rating.stars = stars
-                rating.feedback = feedback
-                rating.save()
-                serializer = RatingSerializer(rating, many=False)
-                response = {'message': 'Rating updated', 'result': serializer.data}
-                return Response(response, status=status.HTTP_200_OK)
-            except:
+            # Check if the user has already rated this councilor for this service
+            existing_rating = Rating.objects.filter(user=user, councilor=councilor, service_id=service_id).first()
+            
+            if existing_rating:
+                
+                # Check if at least 30 days have passed since the last rating
+                last_rating_date = existing_rating.updated_at
+                current_date = timezone.now()
+                days_left = (last_rating_date + timedelta(days=30) - current_date).days
+                if current_date - last_rating_date < timedelta(days=30):
+                    response = {'message': f'You can only update your rating for this service once per month. Please try again after {days_left} days.'}
+                    return Response(response, status=status.HTTP_400_BAD_REQUEST)
+            
+                # Update the existing rating
+                existing_rating.stars = stars
+                existing_rating.feedback = feedback
+                existing_rating.save()
+                serializer = RatingSerializer(existing_rating, many=False)
+                response = {'message': 'Rating updated successfully', 'result': serializer.data}
+            else:
                 rating = Rating.objects.create(user=user, councilor=councilor, service_id=service_id, stars=stars, feedback=feedback)
                 serializer = RatingSerializer(rating, many=False)
                 response = {'message': 'Rating created successfully', 'result': serializer.data}

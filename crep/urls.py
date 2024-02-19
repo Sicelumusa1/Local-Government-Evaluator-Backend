@@ -23,4 +23,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('councilors/best/', CouncilorViewSet.as_view({'get': 'list'}), {'rating_type': 'best'}, name='best-councilors'),
     path('councilors/worst/', CouncilorViewSet.as_view({'get': 'list'}), {'rating_type': 'worst'}, name='worst-councilors'),
+    # path('wards/<int:ward_number>/', WardViewSet.as_view({'get': 'retrieve'}), name='ward-details'),
 ]

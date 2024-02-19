@@ -6,6 +6,9 @@ from .utils import send_pin
 from .models import OTP
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.backends import TokenBackend
+from .models import Account
+from rest_framework.decorators import api_view, permission_classes
+from crep.models import Councilor
 # Create your views here.
 
 class SignupUserView(GenericAPIView):
@@ -68,3 +71,23 @@ class TestAuthenticationView(GenericAPIView):
             'message': 'Authorized'
         }
         return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def associate_user_with_councilor(request):
+    try:
+        user = request.user
+        province = request.data.get('province')
+        municipality = request.data.get('municipality')
+        ward = request.data.get('ward')
+
+        # Query the database to find the matching councilor
+        councilor = Councilor.objects.get(province=province, municipality=municipality, ward=ward)
+
+        # Update the user's Councilor field
+        user.councilor = councilor
+        user.save()
+
+        return Response({'message': 'User associated with councilor successfully'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

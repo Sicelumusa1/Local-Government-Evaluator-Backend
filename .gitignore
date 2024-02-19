@@ -9,7 +9,7 @@ db.sqlite3
 /static/
 
 /crep/migrations/
-# .env
+.env
 
 .vscode/
 .idea/

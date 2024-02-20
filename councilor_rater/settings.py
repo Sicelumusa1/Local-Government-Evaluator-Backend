@@ -52,7 +52,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", "https://councilor-rater.web.app",
+    "http://localhost:3000", "https://crep-63b35.web.app", "http://crep-63b35.web.app"
 ]
 
 ROOT_URLCONF = 'councilor_rater.urls'

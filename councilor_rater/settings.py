@@ -52,7 +52,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", "https://polar-garden-45169-dcf474998e03.herokuapp.com", "http://polar-garden-45169-dcf474998e03.herokuapp.com/"
+    "http://localhost:3000", "https://councilor-rater.web.app",
 ]
 
 ROOT_URLCONF = 'councilor_rater.urls'

@@ -27,3 +27,12 @@ def send_pin(email):
 
     send_email = EmailMessage(subject=Subject, body=email_body, from_email=from_email, to=[email])
     send_email.send(fail_silently=True)
+
+def send_password_reset_email(data):
+    email =  EmailMessage(
+        subject= data['email_subject'],
+        body = data['email_body'],
+        from_email = settings.EMAIL_HOST_USER,
+        to = [data['to_email']]
+    )
+    email.send()

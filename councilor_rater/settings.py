@@ -20,8 +20,8 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = ['crep-9988a4a400d8.herokuapp.com']
-# ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['crep-9988a4a400d8.herokuapp.com']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -52,7 +52,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000", "https://crep-b3fc1.web.app", "http://crep-b3fc1.web.app"
+    "http://localhost:3000",
 ]
 
 ROOT_URLCONF = 'councilor_rater.urls'

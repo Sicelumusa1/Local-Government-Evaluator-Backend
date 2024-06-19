@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
 from .serializers import SignupSerializer, LoginSerializer, PasswordResetSelializer, NewPasswordSerializer
 from rest_framework.response import Response
 from .utils import send_pin
@@ -50,20 +51,48 @@ class VerifyEmail(GenericAPIView):
         except OTP.DoesNotExist:
             return Response({'message': 'otp not provided'}, status=status.HTTP_404_NOT_FOUND)
         
-class LoginView(GenericAPIView):
+class LoginView(APIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        user_data = serializer.validated_data
+        access_token = user_data.get('access_token')
+        refresh_token = user_data.get('refresh_token')
+
+        response = Response({
+            'message': 'Login successful',
+            'email': user_data.get('email'),
+            'full_name': user_data.get('full_name')
+        })
+
+        response.set_cookie(
+            key='access',
+            value=access_token,
+            httponly=True,
+            secure=True,
+            samesite='None'
+        )
+
+        response.set_cookie(
+            key='access',
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite='None'
+        )
+
+        return response
+
 
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def validate_jwt_token(token):
         try:
-            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=False)
+            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
             user = valid_data['user']
             return user
         except Exception as e:

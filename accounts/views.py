@@ -73,19 +73,18 @@ class LoginView(APIView):
             value=access_token,
             httponly=True,
             secure=True,
-            samesite='None'
+            samesite='Lax'
         )
 
         response.set_cookie(
-            key='access',
+            key='refresh',
             value=refresh_token,
             httponly=True,
             secure=True,
-            samesite='None'
+            samesite='Lax'
         )
 
         return response
-
 
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]

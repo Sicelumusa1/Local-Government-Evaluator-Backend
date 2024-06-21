@@ -3,7 +3,7 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from decouple import config
-from dj_database_url import parse as dburl
+import dj_database_url
 
 # load_dotenv()
 
@@ -104,7 +104,9 @@ REST_FRAMEWORK = {
 default_dburl = 'sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
 
 DATABASES = {
-    'default': config('DATABASE_URL', default=default_dburl, cast=dburl),
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default=default_dburl)
+    )
 }
 
 REST_FRAMEWORK = {

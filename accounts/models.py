@@ -56,7 +56,7 @@ class AccountManager(BaseUserManager):
 class Account(AbstractBaseUser):
     first_name = models.CharField(max_length=100, verbose_name=_('First Name'))
     last_name = models.CharField(max_length=100, verbose_name=_('Last Name'))
-    username = models.CharField(max_length=100, unique=True)
+    username = models.CharField(max_length=100, unique=False)
     email = models.EmailField(max_length=100, unique=True, verbose_name=_('Email Address'))
     province = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True, blank=True)
     municipality = models.ForeignKey(Municipality, on_delete=models.SET_NULL, null=True, blank=True)

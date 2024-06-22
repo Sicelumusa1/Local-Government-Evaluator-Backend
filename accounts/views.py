@@ -24,7 +24,7 @@ class SignupUserView(GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             user=serializer.data
-            send_pin(user.email)
+            send_pin(user['email'])
             # Send user an email
             return Response({
                 'data':user,

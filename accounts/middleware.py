@@ -5,7 +5,7 @@ from .models import Account
 
 class JWTAuthenticationMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        token = request.COOKIES.get('access_token')
+        token = request.COOKIES.get('access')
         if token:
             try:
                 access_token = AccessToken(token)

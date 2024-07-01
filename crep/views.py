@@ -108,6 +108,11 @@ class CouncilorViewSet(viewsets.ModelViewSet):
             user = request.user
             feedback = request.data.get('feedback', None)
             service_id = request.data.get('service')
+
+            # Ensure the user is authenticated
+            if isinstance(user, AnonymousUser):
+                response = {'message': 'Authentication required'}
+                return Response(response, status=status.HTTP_401_UNAUTHORIZED)
             
             # Check if the user is trying to rate their councilor or not
             user_councilor = request.user.councilor

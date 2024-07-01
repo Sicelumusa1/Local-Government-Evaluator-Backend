@@ -9,6 +9,6 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
         if token:
             try:
                 access_token = AccessToken(token)
-                request.user = Account.objects.get(id=access_token['user_id'])
+                request.user = Account.objects.get(id=user_id)
             except Exception as e:
                 request.user = AnonymousUser()

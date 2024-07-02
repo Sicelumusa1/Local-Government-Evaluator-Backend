@@ -51,27 +51,35 @@ class VerifyEmail(GenericAPIView):
         except OTP.DoesNotExist:
             return Response({'message': 'otp not provided'}, status=status.HTTP_404_NOT_FOUND)
         
-class LoginView(APIView):
+# class LoginView(APIView):
+#     permission_classes = [AllowAny]
+#     serializer_class = LoginSerializer
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.serializer_class(data=request.data, context={'request':request})
+#         if serializer.is_valid():
+        
+#             user_data = serializer.validated_data
+#             access_token = user_data.get('access_token')
+#             refresh_token = user_data.get('refresh_token')
+
+#             response = Response({
+#                 'message': 'Login successful',
+#                 'email': user_data.get('email'),
+#                 'full_name': user_data.get('full_name'),
+#                 'access_token': access_token,
+#                 'refresh_token': refresh_token
+#             }, status=status.HTTP_200_OK)
+
+#             return response
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request':request})
-        if serializer.is_valid():
-        
-            user_data = serializer.validated_data
-            access_token = user_data.get('access_token')
-            refresh_token = user_data.get('refresh_token')
-
-            response = Response({
-                'message': 'Login successful',
-                'email': user_data.get('email'),
-                'full_name': user_data.get('full_name'),
-                'access_token': access_token,
-                'refresh_token': refresh_token
-            }, status=status.HTTP_200_OK)
-
-            return response
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]

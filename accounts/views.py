@@ -70,6 +70,8 @@ class LoginView(APIView):
             'refresh_token': refresh_token
         })
 
+        return response
+
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 

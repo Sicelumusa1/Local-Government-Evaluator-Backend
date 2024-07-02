@@ -65,26 +65,10 @@ class LoginView(APIView):
         response = Response({
             'message': 'Login successful',
             'email': user_data.get('email'),
-            'full_name': user_data.get('full_name')
+            'full_name': user_data.get('full_name'),
+            'access_token': access_token,
+            'refresh_token': refresh_token
         })
-
-        response.set_cookie(
-            key='access',
-            value=access_token,
-            httponly=True,
-            secure=True,
-            samesite='None'
-        )
-
-        response.set_cookie(
-            key='refresh',
-            value=refresh_token,
-            httponly=True,
-            secure=True,
-            samesite='None'
-        )
-
-        return response
 
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]

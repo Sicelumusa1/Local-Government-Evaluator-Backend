@@ -1,5 +1,5 @@
 from django.utils.deprecation import MiddlewareMixin
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken, TokenError
 from django.contrib.auth.models import AnonymousUser
 from .models import Account
 

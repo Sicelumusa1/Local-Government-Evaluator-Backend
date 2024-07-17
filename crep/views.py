@@ -5,14 +5,13 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from rest_framework.authentication import TokenAuthentication
 from datetime import timedelta
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Province, Municipality, Ward, Councilor, Services, Rating
+from .models import Province, Municipality, Ward, Councilor, Services, Rating, Perspective, Petition
 from .serializers import ProvinceSerializer, MunicipalitySerializer, CouncilorSerializer
-from .serializers import ServicesSerializer, RatingSerializer, WardSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
+from .serializers import ServicesSerializer, RatingSerializer, WardSerializer, PerspectiveSerializer, PetitionSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated, IsOwnerOrReadOnly
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404
@@ -99,7 +98,7 @@ class CouncilorViewSet(viewsets.ModelViewSet):
         return queryset
             
     # Custom rating method
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def rate_councilor(self, request, pk=None):
         if 'service' in request.data and 'stars' in request.data:
 
@@ -109,10 +108,6 @@ class CouncilorViewSet(viewsets.ModelViewSet):
             feedback = request.data.get('feedback', None)
             service_id = request.data.get('service')
 
-            # Ensure the user is authenticated
-            if isinstance(user, AnonymousUser):
-                response = {'message': 'Authentication required'}
-                return Response(response, status=status.HTTP_401_UNAUTHORIZED)
             
             # Check if the user is trying to rate their councilor or not
             user_councilor = request.user.councilor
@@ -173,3 +168,68 @@ class RatingViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         response = {'message': 'Not the best way to update a rating'}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
+    
+class PerspectiveViewSet(viewsets.ModelViewSet):
+    queryset = Perspective.objects.all()
+    serializer_class = PerspectiveSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        ward = user.ward
+
+        if not ward:
+            response = {'message': 'You do not belong to any ward.'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ensure that the perspective is created in the user's own ward
+        if serializer.validated_data.get('ward') != ward:
+            response = {'message': 'This is not your ward.'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save(user=user, ward=ward)
+
+class PetitionViewSet(viewsets.ModelViewSet):
+    queryset = Petition.objects.all()
+    serializer_class = PetitionSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        ward = user.ward
+
+        if not ward:
+            response = {'message': 'You do not belong to any ward. Please Login'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ensure that the petition is created in the user's own ward
+        if serializer.validated_data.get('ward') != ward:
+            response = {'message': 'This is not your ward.'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Ensure that there is only one petition per ward
+        existing_petition = Petition.objects.filter(ward=ward, status='active').first()
+        if existing_petition:
+            response = {'message': 'There is already an active petition in your ward.'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save(user=user, ward=ward)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def sign_petition(self, request, pk=None):
+        petition = get_object_or_404(Petition, pk=pk)
+        user = request.user
+
+        # Ensure only residents on the ward can sign the petition
+        if user.ward != petition.ward:
+            response = {'message': 'You can only sign petitions in your ward'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the user has not already signed the petition
+        if petition.signatures.filter(id=user.id).exists():
+            response = {'message': 'You have already signed this petition'}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
+        petition.signatures.add(user)
+        response = {'message': 'Petition signed successfully'}
+        return Response(response, status=status.HTTP_200_OK)

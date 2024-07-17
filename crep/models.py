@@ -108,3 +108,52 @@ class Rating(models.Model):
             self.quarter = (now.month - 1) // 3 + 1
             self.year = now.year
         super().save(*args, **kwargs)
+
+
+class Perspective(models.Model):
+    """
+    Represents the perpectives of the residents with regards to the councilors perfomance
+    """
+    tittle = models.CharField(max_length=50)
+    description = models.TextField(max_length=500)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    ward = models.ForeignKey(Ward, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+class Petition(models.Model):
+    """
+    Represents the pertition set in motion by residents in case they are dissatisfied 
+    with the leadership of their councilor
+    """
+    title = models.CharField(max_length=50)
+    description = models.TextField(max_length=1000)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    ward = models.ForeignKey(Ward, on_delete=models.CASCADE)
+    signatures = models.ManyToManyField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='petitions_signed', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+    
+    def sign_petition(self, user):
+        """
+        Adds a user's signature to the petition.
+        """
+        self.signatures.add(user)
+
+    def remove_signature(self, user):
+        """
+        Removes a user's signature from the petition.
+        """
+        self.signatures.remove(user)
+    
+    def total_signatures(self):
+        """
+        Returns the total number of signatures on the petition.
+        """
+        return self.signatures.count()

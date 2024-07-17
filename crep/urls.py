@@ -5,6 +5,7 @@ from django.conf.urls import include
 from rest_framework import routers
 from .views import CouncilorViewSet, ServicesViewSet, RatingViewSet
 from .views import ProvinceViewSet, MunicipalityViewSet, WardViewSet
+from .views import PerspectiveViewSet, PetitionViewSet
 
 
 router = routers.DefaultRouter()
@@ -17,11 +18,12 @@ router.register(r'wards/(?P<ward_number>\d+)/councilors', CouncilorViewSet, base
 router.register('councilors', CouncilorViewSet, basename='councilor')
 router.register('services', ServicesViewSet)
 router.register('ratings', RatingViewSet)
+router.register('perspectives', PerspectiveViewSet)
+router.register('petitions', PetitionViewSet)
 
 
 urlpatterns = [
     path('', include(router.urls)),
     path('councilors/best/', CouncilorViewSet.as_view({'get': 'list'}), {'rating_type': 'best'}, name='best-councilors'),
     path('councilors/worst/', CouncilorViewSet.as_view({'get': 'list'}), {'rating_type': 'worst'}, name='worst-councilors'),
-    # path('wards/<int:ward_number>/', WardViewSet.as_view({'get': 'retrieve'}), name='ward-details'),
 ]

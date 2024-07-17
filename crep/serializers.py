@@ -14,7 +14,7 @@ This module defines serializers for the followig models:
 Each serializer is a subclass of rest_framework. serializers.ModelSerializer and specifies the model and fields to include or exclude duing serialization and deserialization.
 """
 from rest_framework import serializers
-from .models import Province, Municipality, Ward, Councilor, Services, Rating
+from .models import Province, Municipality, Ward, Councilor, Services, Rating, Perspective, Petition
 
 
 class ProvinceSerializer(serializers.ModelSerializer):
@@ -61,3 +61,14 @@ class RatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
         fields = ('id', 'user', 'stars', 'councilor', 'service', 'section_or_area', 'quarter', 'year', 'feedback')
+
+class PerspectiveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Perspective
+        fields = '__all__'
+        read_only_fields = ('user', 'ward')
+class PetitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Petition
+        fields = '__all__'
+        read_only_fields = ('user', 'ward', 'signatures')

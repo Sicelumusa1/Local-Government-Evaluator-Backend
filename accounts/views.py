@@ -13,6 +13,7 @@ from crep.models import Councilor
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from datetime import timedelta
 # Create your views here.
 
 class SignupUserView(GenericAPIView):
@@ -50,36 +51,43 @@ class VerifyEmail(GenericAPIView):
                 return Response({'message': 'Code invalid user already cerified'}, status=status.HTTP_204_NO_CONTENT)
         except OTP.DoesNotExist:
             return Response({'message': 'otp not provided'}, status=status.HTTP_404_NOT_FOUND)
-        
-# class LoginView(APIView):
-#     permission_classes = [AllowAny]
-#     serializer_class = LoginSerializer
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.serializer_class(data=request.data, context={'request':request})
-#         if serializer.is_valid():
-        
-#             user_data = serializer.validated_data
-#             access_token = user_data.get('access_token')
-#             refresh_token = user_data.get('refresh_token')
 
-#             response = Response({
-#                 'message': 'Login successful',
-#                 'email': user_data.get('email'),
-#                 'full_name': user_data.get('full_name'),
-#                 'access_token': access_token,
-#                 'refresh_token': refresh_token
-#             }, status=status.HTTP_200_OK)
-
-#             return response
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class LoginView(GenericAPIView):
+class LoginView(APIView):
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        user_data = serializer.validated_data
+        access_token = user_data.get('access_token')
+        refresh_token = user_data.get('refresh_token')
+
+        response = Response({
+            'message': 'Login successful',
+            'email': user_data.get('email'),
+            'full_name': user_data.get('full_name')
+        })
+
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=True,
+            samesite='None',
+            max_age=30 * 60
+        )
+
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite='None',
+            max_age=24 * 60 * 60
+        )
+
+        return response
 
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]

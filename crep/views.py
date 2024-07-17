@@ -11,7 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from .models import Province, Municipality, Ward, Councilor, Services, Rating, Perspective, Petition
 from .serializers import ProvinceSerializer, MunicipalitySerializer, CouncilorSerializer
 from .serializers import ServicesSerializer, RatingSerializer, WardSerializer, PerspectiveSerializer, PetitionSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated, IsOwnerOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404
@@ -158,7 +158,7 @@ class ServicesViewSet(viewsets.ModelViewSet):
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     def create(self, request, *args, **kwargs):
@@ -192,7 +192,7 @@ class PerspectiveViewSet(viewsets.ModelViewSet):
 class PetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.all()
     serializer_class = PetitionSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def perform_create(self, serializer):
         user = self.request.user

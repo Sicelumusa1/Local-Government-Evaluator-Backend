@@ -12,7 +12,7 @@ from .models import Province, Municipality, Ward, Councilor, Services, Rating, P
 from .serializers import ProvinceSerializer, MunicipalitySerializer, CouncilorSerializer
 from .serializers import ServicesSerializer, RatingSerializer, WardSerializer, PerspectiveSerializer, PetitionSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from accounts.authentication import CustomJWTAuthentication
 from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404
 # Create your views here.
@@ -72,7 +72,7 @@ class CouncilorViewSet(viewsets.ModelViewSet):
     Manages elected councilors within wards.
     """
     serializer_class = CouncilorSerializer
-    authentication_classes = (JWTAuthentication, )
+    authentication_classes = (CustomJWTAuthentication, )
     permission_classes = (AllowAny, )
 
     def get_queryset(self):
@@ -125,12 +125,12 @@ class CouncilorViewSet(viewsets.ModelViewSet):
             
             if existing_rating:
                 
-                # Check if at least 30 days have passed since the last rating
+                # Check if at least 3 months have passed since the last rating
                 last_rating_date = existing_rating.updated_at
                 current_date = timezone.now()
-                days_left = (last_rating_date + timedelta(days=30) - current_date).days
-                if current_date - last_rating_date < timedelta(days=30):
-                    response = {'message': f'You can only update your rating for this service once per month. Please try again after {days_left} days.'}
+                days_left = (last_rating_date + timedelta(days=90) - current_date).days
+                if current_date - last_rating_date < timedelta(days=90):
+                    response = {'message': f'You can only update your rating for this service once in 3 months. Please try again after {days_left} days.'}
                     return Response(response, status=status.HTTP_400_BAD_REQUEST)
             
                 # Update the existing rating
@@ -158,7 +158,7 @@ class ServicesViewSet(viewsets.ModelViewSet):
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
-    authentication_classes = (JWTAuthentication,)
+    authentication_classes = (CustomJWTAuthentication,)
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     def create(self, request, *args, **kwargs):

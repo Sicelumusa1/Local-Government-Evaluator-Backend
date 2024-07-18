@@ -82,9 +82,10 @@ class LoginView(APIView):
             response.delete_cookie('jwt')
             
             # Set the new token in the cookie
-            response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None')
+            response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None', path='/')
             response.data = {
-                'message': 'Login successful'
+                'message': 'Login successful',
+                'user': AccountSerializer(user).data
             }
 
             return response
@@ -92,20 +93,29 @@ class LoginView(APIView):
             return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     
 class ProfileView(APIView):
+    permission_class = [IsAuthenticated]
+
     def get(self, request):
         token = request.COOKIES.get('jwt')
         secret = settings.SECRET_KEY
 
         if not token:
-            raise AuthenticationFailed('Unauthenticated!')
+           return Response({'message': 'No token provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             payload = jwt.decode(token, secret, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
+            return Response({'message': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.DecodeError:
+            return Response({'message': 'Error decoding token'}, status=status.HTTP_400_BAD_REQUEST)
         
-        user = Account.objects.get(id=payload['id'])
-        serializer = AccountSerializer(user)
-        return Response(serializer.data)
+        try:
+            user_data = Account.objects.get(id=payload['id'])
+        except Account.DoesNotExist:
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        user = AccountSerializer(user_data).data
+        return Response(user, status=status.HTTP_200_OK)
     
 
 @api_view(['POST'])

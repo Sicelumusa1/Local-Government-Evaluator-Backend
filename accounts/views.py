@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
-from .serializers import SignupSerializer, LoginSerializer, PasswordResetSelializer, NewPasswordSerializer
+from .serializers import SignupSerializer, LoginSerializer, PasswordResetSelializer, NewPasswordSerializer, AccountSerializer
 from rest_framework.response import Response
 from .utils import send_pin
 from .models import OTP
@@ -13,7 +13,10 @@ from crep.models import Councilor
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from datetime import timedelta
+from rest_framework.exceptions import AuthenticationFailed
+from django.conf import settings
+import datetime
+import jwt
 # Create your views here.
 
 class SignupUserView(GenericAPIView):
@@ -59,35 +62,44 @@ class LoginView(APIView):
         serializer = self.serializer_class(data=request.data, context={'request':request})
         serializer.is_valid(raise_exception=True)
         
+        secret = settings.SECRET_KEY
         user_data = serializer.validated_data
-        access_token = user_data.get('access_token')
-        refresh_token = user_data.get('refresh_token')
+        
+        # Get user instance from email
+        user = Account.objects.get(email=user_data['email'])
 
-        response = Response({
-            'message': 'Login successful',
-            'email': user_data.get('email'),
-            'full_name': user_data.get('full_name')
-        })
+        payload = {
+            "id": user.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            "iat": datetime.datetime.utcnow()
+        }
 
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=True,
-            samesite='None',
-            max_age=30 * 60
-        )
+        token = jwt.encode(payload, secret, algorithm='HS256')
+        response = Response()
 
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=True,
-            samesite='None',
-            max_age=24 * 60 * 60
-        )
+        response.set_cookie(key='jwt', value=token, httponly=True)
+        response.data = {
+            'message': 'success',
+            'user': AccountSerializer(user).data
+        }
 
         return response
+    
+class ProfileView(APIView):
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
+        secret = settings.SECRET_KEY
+
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+        try:
+            payload = jwt.decode(token, secret, algorithm=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        user = Account.objects.get(id=payload['id'])
+        serializer = AccountSerializer(user)
+        return Response(serializer.data)
 
 class TestAuthenticationView(GenericAPIView):
     permission_classes = [IsAuthenticated]

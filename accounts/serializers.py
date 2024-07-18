@@ -9,6 +9,19 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from .utils import send_password_reset_email
 
+
+class AccountSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Account
+        fields = [
+            'email', 'first_name', 'last_name', 'username', 'province', 'municipality', 
+            'ward', 'councilor' ,'section_or_area', 'date_joined', 'last_login', 'is_admin',
+            'is_staff', 'is_active', 'is_verified', 'is_superadmin'
+        ]
+        read_only_fields = ['date_joined', 'last_login', 'is_admin',
+            'is_staff', 'is_active', 'is_verified', 'is_superadmin']
+        
 class SignupSerializer(serializers.ModelSerializer):
     password=serializers.CharField(max_length=100, min_length=7, write_only=True)
     password2=serializers.CharField(max_length=100, min_length=7, write_only=True)
@@ -44,13 +57,10 @@ class SignupSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=6)
     password = serializers.CharField(max_length=255, write_only=True)
-    full_name = serializers.CharField(max_length=255, read_only=True)
-    access_token = serializers.CharField(max_length=255, read_only=True)
-    refresh_token = serializers.CharField(max_length=255, read_only=True)
 
     class Meta:
         model = Account
-        fields = ['email', 'password', 'full_name', 'access_token', 'refresh_token']
+        fields = ['email', 'password']
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -60,13 +70,11 @@ class LoginSerializer(serializers.ModelSerializer):
         if not user:
             raise AuthenticationFailed('Invalid credentials try again')
         if not user.is_verified:
-            raise AuthenticationFailed('Invalid credentials try again')
-        user_tokens = user.tokens()
+            raise AuthenticationFailed('Account is not verified')
+        
         return {
             'email': user.email,
-            'full_name': user.get_full_name,
-            'access_token': str(user_tokens.get('access')),
-            'refresh_token': str(user_tokens.get('refresh'))
+            'user_id': user.id
         }
     
 class PasswordResetSelializer(serializers.Serializer):

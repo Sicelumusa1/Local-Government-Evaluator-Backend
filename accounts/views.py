@@ -78,6 +78,10 @@ class LoginView(APIView):
             token = jwt.encode(payload, secret, algorithm='HS256')
             response = Response()
 
+            # Clear the existing cookie
+            response.delete_cookie('jwt')
+            
+            # Set the new token in the cookie
             response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None')
             response.data = {
                 'message': 'Login successful'

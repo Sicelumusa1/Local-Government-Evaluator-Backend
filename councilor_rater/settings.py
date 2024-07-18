@@ -60,6 +60,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1"
 ]
 CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SECORE = True
+SESSION_COOKIE_HTTPONLY = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://crep.gabuza.tech",
@@ -97,7 +99,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
 }
 

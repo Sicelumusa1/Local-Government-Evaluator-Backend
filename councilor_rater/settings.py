@@ -21,7 +21,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG')
 
 # ALLOWED_HOSTS = ['crep-9988a4a400d8.herokuapp.com']
-ALLOWED_HOSTS = ['web-production-81ec5.up.railway.app', 'crep.gabuza.tech']
+ALLOWED_HOSTS = ['web-production-81ec5.up.railway.app', 'crep.gabuza.tech', "127.0.0.1"]
 
 
 # Application definition
@@ -47,21 +47,23 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'accounts.middleware.JWTAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://crep.gabuza.tech",
+    "http://127.0.0.1"
 ]
 CORS_ALLOWED_ORIGINS = [
     "https://crep.gabuza.tech",
+    "http://127.0.0.1"
 ]
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://crep.gabuza.tech",
+    "http://127.0.0.1",
     "https://web-production-81ec5.up.railway.app"
 ]
 
@@ -91,23 +93,24 @@ AUTH_USER_MODEL = 'accounts.Account'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'accounts.middleware.JWTAuthenticationMiddleware',
+        'accounts.authentication.CustomJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_TOKEN_CLASSES": ('rest_framework_simplejwt.tokens.AccessToken',),
-    "TOKEN_USER_CLASS": 'accounts.models.Account',
-    "TOKEN_OBTAIN_SERIALIZER": 'rest_framework_simplejwt.serializers.TokenObtainPairSerializer'
-}
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+#     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+#     "ROTATE_REFRESH_TOKENS": True,
+#     "BLACKLIST_AFTER_ROTATION": True,
+#     "AUTH_HEADER_TYPES": ("Bearer",),
+#     "AUTH_TOKEN_CLASSES": ('rest_framework_simplejwt.tokens.AccessToken',),
+#     "TOKEN_USER_CLASS": 'accounts.models.Account',
+#     "TOKEN_OBTAIN_SERIALIZER": 'rest_framework_simplejwt.serializers.TokenObtainPairSerializer'
+# }
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

@@ -82,7 +82,15 @@ class LoginView(APIView):
             response.delete_cookie('jwt')
             
             # Set the new token in the cookie
-            response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None', path='/')
+            response.set_cookie(
+                key='jwt', 
+                value=token,
+                httponly=True, 
+                secure=True, 
+                samesite='None', 
+                path='/',
+                max_age=3600
+            )
             response.data = {
                 'message': 'Login successful',
                 'user': AccountSerializer(user).data

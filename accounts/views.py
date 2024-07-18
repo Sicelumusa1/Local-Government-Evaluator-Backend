@@ -74,7 +74,7 @@ class LoginView(APIView):
             "iat": datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, secret, algorithm='HS256')
+        token = jwt.encode(payload, secret, algorithms='HS256')
         response = Response()
 
         response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None')
@@ -93,7 +93,7 @@ class ProfileView(APIView):
         if not token:
             raise AuthenticationFailed('Unauthenticated!')
         try:
-            payload = jwt.decode(token, secret, algorithm=['HS256'])
+            payload = jwt.decode(token, secret, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
         
@@ -101,22 +101,22 @@ class ProfileView(APIView):
         serializer = AccountSerializer(user)
         return Response(serializer.data)
 
-class TestAuthenticationView(GenericAPIView):
-    permission_classes = [IsAuthenticated]
+# class TestAuthenticationView(GenericAPIView):
+#     permission_classes = [IsAuthenticated]
 
-    def validate_jwt_token(token):
-        try:
-            valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
-            user = valid_data['user']
-            return user
-        except Exception as e:
-            return None
+#     def validate_jwt_token(token):
+#         try:
+#             valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
+#             user = valid_data['user']
+#             return user
+#         except Exception as e:
+#             return None
 
-    def get(self, request):
-        data= {
-            'message': 'Authorized'
-        }
-        return Response(data, status=status.HTTP_200_OK)
+#     def get(self, request):
+#         data= {
+#             'message': 'Authorized'
+#         }
+#         return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

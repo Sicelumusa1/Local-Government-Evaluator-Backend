@@ -68,22 +68,24 @@ class LoginView(APIView):
         # Get user instance from email
         user = Account.objects.get(email=user_data['email'])
 
-        payload = {
-            "id": user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            "iat": datetime.datetime.utcnow()
-        }
+        if user is not None:
+            payload = {
+                "id": user.id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                "iat": datetime.datetime.utcnow()
+            }
 
-        token = jwt.encode(payload, secret, algorithm='HS256')
-        response = Response()
+            token = jwt.encode(payload, secret, algorithm='HS256')
+            response = Response()
 
-        response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None')
-        response.data = {
-            'message': 'success',
-            'user': AccountSerializer(user).data
-        }
+            response.set_cookie(key='jwt', value=token, httponly=True, secure=True, samesite='None')
+            response.data = {
+                'message': 'Login successful'
+            }
 
-        return response
+            return response
+        else:
+            return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     
 class ProfileView(APIView):
     def get(self, request):
@@ -100,23 +102,7 @@ class ProfileView(APIView):
         user = Account.objects.get(id=payload['id'])
         serializer = AccountSerializer(user)
         return Response(serializer.data)
-
-# class TestAuthenticationView(GenericAPIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def validate_jwt_token(token):
-#         try:
-#             valid_data = TokenBackend(algorithm='HS256').decode(token, verify=True)
-#             user = valid_data['user']
-#             return user
-#         except Exception as e:
-#             return None
-
-#     def get(self, request):
-#         data= {
-#             'message': 'Authorized'
-#         }
-#         return Response(data, status=status.HTTP_200_OK)
+    
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

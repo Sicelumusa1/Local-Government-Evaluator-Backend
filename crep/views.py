@@ -173,7 +173,12 @@ class PerspectiveViewSet(viewsets.ModelViewSet):
     serializer_class = PerspectiveSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
-
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        ward_id = self.queryset.query_params.get('ward', None)
+        if ward_id:
+            queryset = queryset.filter(ward_id=ward_id)
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user

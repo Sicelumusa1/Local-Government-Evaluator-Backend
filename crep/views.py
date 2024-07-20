@@ -15,7 +15,6 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAu
 from accounts.authentication import CustomJWTAuthentication
 from django.db.models import Avg, Q
 from django.shortcuts import get_object_or_404
-# Create your views here.
 
 
 class ProvinceViewSet(viewsets.ModelViewSet):
@@ -174,6 +173,8 @@ class PerspectiveViewSet(viewsets.ModelViewSet):
     serializer_class = PerspectiveSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
+
+
     def perform_create(self, serializer):
         user = self.request.user
         ward = user.ward
@@ -193,6 +194,13 @@ class PetitionViewSet(viewsets.ModelViewSet):
     queryset = Petition.objects.all()
     serializer_class = PetitionSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        ward_id = self.queryset.query_params.get('ward', None)
+        if ward_id:
+            queryset = queryset.filter(ward_id=ward_id)
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user

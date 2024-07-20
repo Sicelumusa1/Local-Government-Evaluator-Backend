@@ -175,14 +175,15 @@ class PerspectiveViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Retrieve ward_id from the query parameters
-        ward_id = self.queryset.query_params.get('ward_id')
+        ward_id = self.kwargs.get('ward_id')
         
         # Filter the perspectives based on the specified ward
         if ward_id:
-            queryset = Perspective.objects.filter(ward_id=ward_id)
+            queryset = Perspective.objects.filter(ward=ward_id)
         else:
             queryset = Perspective.objects.all()
         return queryset
+
 
     def perform_create(self, serializer):
         user = self.request.user

@@ -114,7 +114,7 @@ class Perspective(models.Model):
     """
     Represents the perpectives of the residents with regards to the councilors perfomance
     """
-    tittle = models.CharField(max_length=50)
+    title = models.CharField(max_length=50)
     description = models.TextField(max_length=500)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE)

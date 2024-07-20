@@ -174,10 +174,14 @@ class PerspectiveViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        ward_id = self.queryset.query_params.get('ward', None)
+        # Retrieve ward_id from the query parameters
+        ward_id = self.queryset.query_params.get('ward_id')
+        
+        # Filter the perspectives based on the specified ward
         if ward_id:
-            queryset = queryset.filter(ward_id=ward_id)
+            queryset = Perspective.objects.filter(ward_id=ward_id)
+        else:
+            queryset = Perspective.objects.all()
         return queryset
 
     def perform_create(self, serializer):

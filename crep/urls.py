@@ -16,12 +16,12 @@ router.register('municipalities', MunicipalityViewSet, basename='municipality')
 router.register('wards', WardViewSet, basename='ward')
 router.register(r'wards/(?P<ward_number>\d+)/councilors', CouncilorViewSet, basename='councilor_ward')
 router.register(r'wards/(?P<ward_id>\d+)/perspectives', PerspectiveViewSet, basename='perspective')
-router.register(r'wards/(?P<ward_id>\d+)/petitions', PerspectiveViewSet, basename='petitions')
+router.register(r'wards/(?P<ward_id>\d+)/petitions', PetitionViewSet, basename='petitions')
 router.register('councilors', CouncilorViewSet, basename='councilor')
 router.register('services', ServicesViewSet)
 router.register('ratings', RatingViewSet)
-router.register('perspectives', PerspectiveViewSet)
-router.register('petitions', PetitionViewSet)
+router.register('perspectives', PerspectiveViewSet, basename='perspective_post')
+router.register('petitions', PetitionViewSet, basename='petition_post')
 
 
 urlpatterns = [

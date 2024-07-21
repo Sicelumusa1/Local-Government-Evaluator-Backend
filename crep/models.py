@@ -143,7 +143,7 @@ class Petition(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE)
     signatures = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='petitions_signed', blank=True)
-    status = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

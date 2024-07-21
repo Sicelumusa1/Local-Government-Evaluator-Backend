@@ -169,7 +169,7 @@ class RatingViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
     
 class PerspectiveViewSet(viewsets.ModelViewSet):
-    queryset = Perspective.objects.all()
+    
     serializer_class = PerspectiveSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )
 
@@ -201,15 +201,19 @@ class PerspectiveViewSet(viewsets.ModelViewSet):
         serializer.save(user=user, ward=ward)
 
 class PetitionViewSet(viewsets.ModelViewSet):
-    queryset = Petition.objects.all()
+    
     serializer_class = PetitionSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        ward_id = self.queryset.query_params.get('ward', None)
+        # Retrieve ward_id from the query parameters
+        ward_id = self.kwargs.get('ward_id')
+        
+        # Filter the petitions based on the specified ward
         if ward_id:
-            queryset = queryset.filter(ward_id=ward_id)
+            queryset = Petition.objects.filter(ward_id=ward_id)
+        else:
+            queryset = Petition.objects.all()
         return queryset
 
     def perform_create(self, serializer):
@@ -226,7 +230,7 @@ class PetitionViewSet(viewsets.ModelViewSet):
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         
         # Ensure that there is only one petition per ward
-        existing_petition = Petition.objects.filter(ward=ward, status='active').first()
+        existing_petition = Petition.objects.filter(ward=ward, status='active').exists()
         if existing_petition:
             response = {'message': 'There is already an active petition in your ward.'}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)

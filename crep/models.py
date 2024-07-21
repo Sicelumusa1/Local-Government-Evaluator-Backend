@@ -15,6 +15,9 @@ class Province(models.Model):
     """
     name = models.CharField(max_length=100)
 
+    def petition_count(self):
+        return Petition.objects.filter(ward__municipality__province=self, status='active').count()
+
     def __str__(self):
         return self.name
 
@@ -26,6 +29,9 @@ class Municipality(models.Model):
     name = models.CharField(max_length=100)
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
 
+    def petition_count(self):
+        return Petition.objects.filter(ward__municipality=self, status='active').count()
+
     def __str__(self):
         return self.name
 
@@ -36,6 +42,9 @@ class Ward(models.Model):
     """
     ward_number = models.IntegerField(unique=True)
     municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name='wards')
+
+    def petition(self):
+        return Petition.objects.filter(ward=self, status='active').first()
 
     def __str__(self):
         return f"Ward {self.ward_number} - {self.municipality}"
@@ -134,8 +143,10 @@ class Petition(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE)
     signatures = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='petitions_signed', blank=True)
+    status = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return self.title

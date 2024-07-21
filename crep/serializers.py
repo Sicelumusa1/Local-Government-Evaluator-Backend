@@ -18,21 +18,39 @@ from .models import Province, Municipality, Ward, Councilor, Services, Rating, P
 
 
 class ProvinceSerializer(serializers.ModelSerializer):
+
+    petition_count = serializers.SerializerMethodField()
     class Meta:
         model = Province
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'petition_count')
+    
+    def get_petition_count(self, obj):
+        return obj.petition_count()
 
 
 class MunicipalitySerializer(serializers.ModelSerializer):
+
+    petition_count = serializers.SerializerMethodField()
     class Meta:
         model = Municipality
-        fields = ('id', 'name', 'province')
+        fields = ('id', 'name', 'province', 'petition_count')
+    
+    def get_petition_count(self, obj):
+        return obj.petition_count()
 
 
 class WardSerializer(serializers.ModelSerializer):
+    
+    petition = serializers.SerializerMethodField()
     class Meta:
         model = Ward
-        fields = ('id', 'ward_number', 'municipality')
+        fields = ('id', 'ward_number', 'municipality', 'petition')
+    
+    def get_petition(self, obj):
+        petition = obj.petition()
+        if petition:
+            return PetitionSerializer(petition).data
+        return None
 
 
 class CouncilorSerializer(serializers.ModelSerializer):
@@ -70,5 +88,4 @@ class PerspectiveSerializer(serializers.ModelSerializer):
 class PetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Petition
-        fields = '__all__'
-        read_only_fields = ('user', 'ward', 'signatures')
+        fields = ('id', 'title', 'description', 'user', 'ward', 'signatures', 'status')
